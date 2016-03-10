@@ -253,17 +253,20 @@ class HAProxy(object):
             output = output.split('\n')
             result = output
 
+            pxnames = []
             for line in result:
                 if 'BACKEND' in line:
-                    result =  line.split(',')[0]
-                    pxname = result
-                    cmd = "get weight %s/%s ; enable server %s/%s" % (pxname, svname, pxname, svname)
-                    if weight:
-                        cmd += "; set weight %s/%s %s" % (pxname, svname, weight)
-                    self.execute(cmd)
-                    if self.wait:
-                        self.wait_until_status(pxname, svname, 'UP')
+                    pxnames.append(line.split(',')[0])
 
+            for pxname in pxnames:
+                cmd = "get weight %s/%s ; enable server %s/%s" % (pxname, svname, pxname, svname)
+                if weight:
+                    cmd += "; set weight %s/%s %s" % (pxname, svname, weight)
+                self.execute(cmd)
+
+            if self.wait:
+                for pxname in pxnames:
+                    self.wait_until_status(pxname, svname, 'UP')
         else:
             pxname = backend
             cmd = "get weight %s/%s ; enable server %s/%s" % (pxname, svname, pxname, svname)
@@ -287,16 +290,20 @@ class HAProxy(object):
             output = output.split('\n')
             result = output
 
+            pxnames = []
             for line in result:
                 if 'BACKEND' in line:
-                    result =  line.split(',')[0]
-                    pxname = result
-                    cmd = "get weight %s/%s ; disable server %s/%s" % (pxname, svname, pxname, svname)
-                    if shutdown_sessions:
-                        cmd += "; shutdown sessions server %s/%s" % (pxname, svname)
-                    self.execute(cmd)
-                    if self.wait:
-                        self.wait_until_status(pxname, svname, 'MAINT')
+                    pxnames.append(line.split(',')[0])
+
+            for pxname in pxnames:
+                cmd = "get weight %s/%s ; disable server %s/%s" % (pxname, svname, pxname, svname)
+                if shutdown_sessions:
+                    cmd += "; shutdown sessions server %s/%s" % (pxname, svname)
+                self.execute(cmd)
+
+            if self.wait:
+                for pxname in pxnames:
+                    self.wait_until_status(pxname, svname, 'MAINT')
 
         else:
             pxname = backend
