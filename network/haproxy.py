@@ -255,8 +255,9 @@ class HAProxy(object):
 
             pxnames = []
             for line in result:
-                if 'BACKEND' in line:
-                    pxnames.append(line.split(',')[0])
+                pxname, hostname = line.split(',')[:2]
+                if hostname not in ('BACKEND', 'FRONTEND') and hostname == svname:
+                    pxnames.append(pxname)
 
             for pxname in pxnames:
                 cmd = "get weight %s/%s ; enable server %s/%s" % (pxname, svname, pxname, svname)
@@ -292,8 +293,9 @@ class HAProxy(object):
 
             pxnames = []
             for line in result:
-                if 'BACKEND' in line:
-                    pxnames.append(line.split(',')[0])
+                pxname, hostname = line.split(',')[:2]
+                if hostname not in ('BACKEND', 'FRONTEND') and hostname == svname:
+                    pxnames.append(pxname)
 
             for pxname in pxnames:
                 cmd = "get weight %s/%s ; disable server %s/%s" % (pxname, svname, pxname, svname)
